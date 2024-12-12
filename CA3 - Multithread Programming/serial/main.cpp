@@ -112,14 +112,20 @@ void applyIIRFilter(std::vector<float>& data, const std::vector<float>& b, const
     data = filteredData;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <../input.wav>" << std::endl;
+        return 1;
+    }
+
     auto start = high_resolution_clock::now();
 
-    std::string inputFile = "../input.wav";
-    std::string outputFile1 = "output1.wav";
-    std::string outputFile2 = "output2.wav";
-    std::string outputFile3 = "output3.wav";
-    std::string outputFile4 = "output4.wav";
+
+    std::string inputFile = argv[1];
+    std::string outputFile1 = "outputBandpassSerial.wav";
+    std::string outputFile2 = "outputNotchSerial.wav";
+    std::string outputFile3 = "outputFIRSerial.wav";
+    std::string outputFile4 = "outputIIRSerial.wav";
 
     SF_INFO fileInfo;
     std::vector<float> audioData;
@@ -134,8 +140,11 @@ int main() {
     auto startBandpass = high_resolution_clock::now();
     applyBandpassFilter(audioData, fileInfo.samplerate, 300.0f, 3000.0f);
     auto endBandpass = high_resolution_clock::now();
-    writeWavFile(outputFile1, audioData, fileInfo);
 
+    auto startWrite = high_resolution_clock::now();
+    writeWavFile(outputFile1, audioData, fileInfo);
+    auto endWrite = high_resolution_clock::now();
+   
     readWavFile(inputFile, audioData, fileInfo);
 
     auto startNotch = high_resolution_clock::now();
@@ -163,6 +172,7 @@ int main() {
     auto end = high_resolution_clock::now();
 
     auto durationRead = duration_cast<milliseconds>(endRead - startRead).count();
+    auto durationWrite = duration_cast<milliseconds>(endWrite - startWrite).count();
     auto durationBandpass = duration_cast<milliseconds>(endBandpass - startBandpass).count();
     auto durationNotch = duration_cast<milliseconds>(endNotch - startNotch).count();
     auto durationFIR = duration_cast<milliseconds>(endFIR - startFIR).count();
@@ -170,6 +180,7 @@ int main() {
     auto totalDuration = duration_cast<milliseconds>(end - start).count();
 
     cout << "Time taken to read data: " << durationRead << " ms" << endl;
+    cout << "Time taken to write data: " << durationWrite << " ms" << endl;
     cout << "Time taken to apply Band-pass Filter: " << durationBandpass << " ms" << endl;
     cout << "Time taken to apply Notch Filter: " << durationNotch << " ms" << endl;
     cout << "Time taken to apply FIR Filter: " << durationFIR << " ms" << endl;
